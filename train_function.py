@@ -4,8 +4,10 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.metrics import multilabel_confusion_matrix
-# Define the training function
-def train_model(model, train_dataset, val_dataset, test_dataset, device, path_save_model, 
+import numpy as np
+import pandas as pd
+
+def train_model(model, train_dataset, val_dataset, test_dataset, device, path_save_modelweights, weights, 
                 lr=0.0001, epochs=30, batch_size=32, l2=0.00001, gamma=0.5,
                 patience=7):
     model = model.to(device)
@@ -18,10 +20,15 @@ def train_model(model, train_dataset, val_dataset, test_dataset, device, path_sa
     # History
     history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 
-    weight = torch.tensor(weights).to(device)
-    
     # Set up loss function and optimizer
-    criterion = nn.CrossEntropyLoss(weight=weight)  
+    if len(weights) == 1:
+        criterion = nn.BCEWithLogitsLoss()
+    else:
+        
+        weight = torch.tensor(weights).to(device)
+        criterion = nn.CrossEntropyLoss(weight=weight)  
+        
+        
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=l2)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=patience, gamma=gamma)
 
@@ -140,7 +147,7 @@ def train_model(model, train_dataset, val_dataset, test_dataset, device, path_sa
         'false negativo': fn
     }
     
-    dataset = pd.DataFrame(metrics.items(), columns=['Metric', 'Value']).to_csv(f'{path_save_model}.csv')
+    dataset = pd.DataFrame(metrics.items(), columns=['Metric', 'Value']).to_csv(f'metrics.csv')
     print(f'Test Accuracy:  {accuracy}\n')
     print(f'Metrics:  {metrics}\n')
 
