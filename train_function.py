@@ -7,7 +7,9 @@ from sklearn.metrics import multilabel_confusion_matrix
 import numpy as np
 import pandas as pd
 
-def train_model(model, train_dataset, val_dataset, test_dataset, device, path_save_modelweights, weights, 
+labels_dict = {}
+
+def train_model(model, train_dataset, val_dataset, test_dataset, device, weights, 
                 lr=0.0001, epochs=30, batch_size=32, l2=0.00001, gamma=0.5,
                 patience=7):
     model = model.to(device)
@@ -51,18 +53,14 @@ def train_model(model, train_dataset, val_dataset, test_dataset, device, path_sa
             labels = labels.to(device).long()   # Convert labels to Long data type
 
             outputs = model(images).float()  # Make sure the output is of type float
-            pred = outputs.argmax(dim=1)  ####################################################
-            # print(f'Pred\n{pred}')
-            # print(f'labels\n{labels}')
-            # print(f'outputs\n{outputs}')
+            pred = outputs.argmax(dim=1)  
             cur_train_loss = criterion(outputs, labels)
-            # pred = torch.nn.functional.one_hot(pred, num_classes=num_classes).cpu().numpy()
 
             cur_train_acc = (pred == labels).sum().item() / batch_size
 
+            optimizer.zero_grad()
             cur_train_loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
 
             train_loss += cur_train_loss 
             train_acc += cur_train_acc
@@ -78,8 +76,7 @@ def train_model(model, train_dataset, val_dataset, test_dataset, device, path_sa
                 cur_valid_loss = criterion(outputs, labels)
                 val_loss += cur_valid_loss
 
-                pred = outputs.argmax(dim=1)  ####################################################
-                # pred = torch.nn.functional.one_hot(pred, num_classes=num_classes).cpu().numpy()
+                pred = outputs.argmax(dim=1)  
                 val_acc += (pred == labels).sum().item() / batch_size
 
         scheduler.step()
@@ -105,50 +102,89 @@ def train_model(model, train_dataset, val_dataset, test_dataset, device, path_sa
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
-    test_acc = 0
+    # test_acc = 0
     print(f'The best val loss is {best_val_loss}.\n\n')
+    # y_true = []
+    # y_pred = []
+    # with torch.no_grad():
+    #     for images, labels in test_loader:
+    #         images, labels = images.to(device), labels.to(device).long()   # Convert labels to Long data type
+
+    #         outputs = model(images).float()  # Make sure the output is of type float
+    #         predictions = torch.round(torch.sigmoid(outputs)).cpu().numpy()
+    #         y_true.extend(labels.cpu().numpy())
+    #         y_pred.extend(predictions)
+    #         pred = outputs.argmax(dim=1) 
+            
+    #         test_acc += (pred == labels).sum().item()
+    # pred_cpu = pred.cpu()  # Movendo o tensor para a CPU
+
+    # # Agora você pode convertê-lo para um array NumPy
+    # y_true = np.array(y_true)
+    # y_pred = np.array(pred_cpu)
     y_true = []
     y_pred = []
+    test_acc = 0
     with torch.no_grad():
         for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device).long()   # Convert labels to Long data type
+            images, labels = images.to(device), labels.to(device).long()
 
-            outputs = model(images).float()  # Make sure the output is of type float
-            predictions = torch.round(torch.sigmoid(outputs)).cpu().numpy()
+            outputs = model(images).float()
+            predictions = torch.argmax(outputs, dim=1).cpu().numpy()  # Get the class index with the highest probability
+
             y_true.extend(labels.cpu().numpy())
-            y_pred.extend(predictions)
-            pred = outputs.argmax(dim=1)  ####################################################
-            # pred = torch.nn.functional.one_hot(pred, num_classes=num_classes).cpu().numpy()
-            test_acc += (pred == labels).sum().item()
-    pred_cpu = pred.cpu()  # Movendo o tensor para a CPU
+            y_pred.append(predictions)  # Append all predictions from this batch
+            test_acc += sum((predictions == labels.cpu().numpy()).flatten())
 
-    # Agora você pode convertê-lo para um array NumPy
+    # Flatten the list of predictions before converting it to a NumPy array
+    y_pred = np.concatenate(y_pred)
     y_true = np.array(y_true)
-    y_pred = np.array(pred_cpu)
-    # y_pred = np.array(pred)
-    
-        # Calculate evaluation metrics
+
+
+# Calculate the metrics for each class
+    metrics = []
+    conf_matrix  = multilabel_confusion_matrix(y_true, y_pred)
     accuracy = (test_acc / len(test_loader))
-    tn, fp, fn, tp = multilabel_confusion_matrix(y_true, y_pred).ravel()
-    precision = precision_score(y_true, y_pred, average='weighted')
-    recall = recall_score(y_true, y_pred, average='weighted')
-    f1 = f1_score(y_true, y_pred, average='weighted')
-    specificity = tn / (tn + fp)
-    sensitivity = tp / (fn + tp)
+    tn_index = (0, 0)
+    fp_index = (0, 1)
+    fn_index = (1, 0)
+    tp_index = (1, 1)
+    for class_name, index in labels_dict.items():
 
-    metrics = {
-        'precision': precision,
-        'recall': recall,
-        'f1_score': f1,
-        'accuracy': accuracy,
-        'specificity': specificity,
-        'sensitivity': sensitivity,
-        'Best Value Loss': best_val_loss,
-        'false negativo': fn
-    }
-    
-    dataset = pd.DataFrame(metrics.items(), columns=['Metric', 'Value']).to_csv(f'metrics.csv')
-    print(f'Test Accuracy:  {accuracy}\n')
-    print(f'Metrics:  {metrics}\n')
+        tn = conf_matrix[index][tn_index]
+        fp = conf_matrix[index][fp_index]
+        fn = conf_matrix[index][fn_index]
+        tp = conf_matrix[index][tp_index]
 
-    return history, model
+        precision = precision_score(y_true, y_pred, average='weighted')
+        recall = recall_score(y_true, y_pred, average='weighted')
+        f1 = f1_score(y_true, y_pred, average='weighted')
+        specificity = tn / (tn + fp)
+        sensitivity = tp / (fn + tp)
+
+        metrics.append({
+            'Class': class_name,
+            'Precision': precision,
+            'Recall': recall,
+            'F1-Score': f1,
+            'Accuracy': accuracy,
+            'True Negatives': tn,
+            'specificity': specificity,
+            'sensitivity': sensitivity,
+            'False Positives': fp,
+            'False Negatives': fn,
+            'True Positives': tp
+        })
+
+    # Create a DataFrame from the metrics
+    metrics_df = pd.DataFrame(metrics)
+
+    # Save to CSV
+    metrics_df.to_csv(f'Model_{model.get_name()}__Epoch_{epoch}__Batch_{batch_size}__Accuracy_{accuracy}.csv', index=False)
+
+    return history, model, accuracy
+
+
+
+
+
