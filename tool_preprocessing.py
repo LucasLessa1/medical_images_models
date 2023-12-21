@@ -137,20 +137,35 @@ def get_label_counts_and_print(dataframe, label_column):
     return label_counts
 
 
+import imageio
 
 def image_analysis(dataframe, path_column='path'):
     smallest_pixel = float('inf')
     largest_pixel = 0
     total_images = 0
     channel_values = {'R': [], 'G': [], 'B': []}
-
+    is_gray = False
     # Iterate through each image in the dataframe
     for index, row in dataframe.iterrows():
         image_path = row[path_column]
         if image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
             # Read the image using imageio
             image = imageio.imread(image_path)
-            
+
+            # Check if the image is grayscale or RGB
+            if len(image.shape) == 2:  # Grayscale image
+                min_pixel = np.min(image)
+                max_pixel = np.max(image)
+                smallest_pixel = min(smallest_pixel, min_pixel)
+                largest_pixel = max(largest_pixel, max_pixel)
+                is_gray = True
+                total_images += 1
+                
+                continue
+                # image = np.expand_dims(image, axis=-1)  # Add a channel dimension
+            elif len(image.shape) == 3 and image.shape[2] == 4:  # RGBA image
+                image = image[:, :, :3]  # Remove alpha channel
+
             # Check for smallest and largest pixel value
             min_pixel = np.min(image)
             max_pixel = np.max(image)
@@ -166,30 +181,43 @@ def image_analysis(dataframe, path_column='path'):
             
             total_images += 1
     
-    # Calculate average and standard deviation per channel
-    channel_stats = {}
-    for channel, values in channel_values.items():
-        avg = np.mean([val[0] for val in values])
-        std_dev = np.mean([val[1] for val in values])
-        channel_stats[channel] = {'average': avg, 'std_dev': std_dev}
-    
     # Print the results
     print(f"Smallest pixel value: {smallest_pixel}")
     print(f"Largest pixel value: {largest_pixel}")
     print(f"Total images processed: {total_images}")
-    print("Channel Statistics:")
-    for channel, stats in channel_stats.items():
-        print(f"Channel '{channel}':")
-        print(f"  - Average: {stats['average']}")
-        print(f"  - Standard Deviation: {stats['std_dev']}")
     
-    # Return results as a dictionary
-    return {
+    channel_stats = {}
+    if is_gray:
+        return {
         'smallest_pixel_value': smallest_pixel,
         'largest_pixel_value': largest_pixel,
         'total_images': total_images,
-        'channel_statistics': channel_stats
+        'channel_statistics': channel_stats,
+        'channels': 1
     }
+    else:
+        # Calculate average and standard deviation per channel
+        for channel, values in channel_values.items():
+            avg = np.mean([val[0] for val in values])
+            std_dev = np.mean([val[1] for val in values])
+            channel_stats[channel] = {'average': avg, 'std_dev': std_dev}
+        
+        print("Channel Statistics:")
+        for channel, stats in channel_stats.items():
+            print(f"Channel '{channel}':")
+            print(f"  - Average: {stats['average']}")
+            print(f"  - Standard Deviation: {stats['std_dev']}")
+        
+        # Return results as a dictionary
+        return {
+            'smallest_pixel_value': smallest_pixel,
+            'largest_pixel_value': largest_pixel,
+            'total_images': total_images,
+            'channel_statistics': channel_stats,
+            'channels': 3
+        }
+
+
 
 def check_images_existence(dataframe, path_column='path'):
     cleaned_dataframe = dataframe.copy()
