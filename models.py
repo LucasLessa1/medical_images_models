@@ -8,7 +8,7 @@ import timm
 class ResNet50(nn.Module):
     def __init__(self, num_classes=1, input_channels=3):
         super(ResNet50, self).__init__()
-        self.resnet50 = models.resnet50(pretrained=True)
+        self.resnet50 = models.resnet50(weights=True)
         
         # Modify the convolutional layer based on input channels
         self.resnet50.conv1 = nn.Conv2d(input_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
