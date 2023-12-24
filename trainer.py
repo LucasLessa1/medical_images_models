@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 
 
-labels_dict = {}
+
 
 class ModelTrainer:
-    def __init__(self, model, device, weights,
+    def __init__(self, model, device, weights, labels_dict,
                 train_dataset, val_dataset, test_dataset, 
                 lr=0.0001, epochs=30, batch_size=32, 
                 l2=0.00001, gamma=0.5, patience=7):
@@ -19,6 +19,7 @@ class ModelTrainer:
         self.device = device
         self.model = model.to(self.device)
         self.weights = weights
+        self.labels_dict = labels_dict
         self.lr = lr
         self.epochs = epochs
         self.batch_size = batch_size
@@ -40,7 +41,7 @@ class ModelTrainer:
         if len(self.weights) == 1:
             self.criterion = nn.BCEWithLogitsLoss()
         else:
-            
+
             self.weight = torch.tensor(self.weights).to(self.device)
             self.criterion = nn.CrossEntropyLoss(weight=self.weight)  
     def optimizer_step(self):
@@ -58,7 +59,8 @@ class ModelTrainer:
             labels = labels.to(self.device).long()   # Convert labels to Long data type
 
             outputs = self.model(images).float()  # Make sure the output is of type float
-            pred = outputs.argmax(dim=1)  
+            print(outputs)
+            pred = torch.argmax(outputs, dim=1)  
             cur_train_loss = self.criterion(outputs, labels)
 
             cur_train_acc = (pred == labels).sum().item() / self.batch_size
@@ -115,7 +117,7 @@ class ModelTrainer:
         metrics = []
         conf_matrix  = multilabel_confusion_matrix(self.y_true, self.y_pred)
         accuracy = (self.test_acc / len(self.test_loader))
-        for i, class_name in zip(range(conf_matrix.shape[0]), labels_dict.items()):
+        for i, class_name in zip(range(conf_matrix.shape[0]), self.labels_dict.items()):
 
             tp = conf_matrix[i, i]
             fn = np.sum(conf_matrix[i, :]) - tp
