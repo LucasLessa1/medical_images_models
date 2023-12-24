@@ -59,7 +59,6 @@ class ModelTrainer:
             labels = labels.to(self.device).long()   # Convert labels to Long data type
 
             outputs = self.model(images).float()  # Make sure the output is of type float
-            print(outputs)
             pred = torch.argmax(outputs, dim=1)  
             cur_train_loss = self.criterion(outputs, labels)
 
