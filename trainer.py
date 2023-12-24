@@ -115,16 +115,12 @@ class ModelTrainer:
         metrics = []
         conf_matrix  = multilabel_confusion_matrix(self.y_true, self.y_pred)
         accuracy = (self.test_acc / len(self.test_loader))
-        tn_index = (0, 0)
-        fp_index = (0, 1)
-        fn_index = (1, 0)
-        tp_index = (1, 1)
-        for class_name, index in labels_dict.items():
+        for i, class_name in zip(range(conf_matrix.shape[0]), labels_dict.items()):
 
-            tn = conf_matrix[index][tn_index]
-            fp = conf_matrix[index][fp_index]
-            fn = conf_matrix[index][fn_index]
-            tp = conf_matrix[index][tp_index]
+            tp = conf_matrix[i, i]
+            fn = np.sum(conf_matrix[i, :]) - tp
+            fp = np.sum(conf_matrix[:, i]) - tp
+            tn = np.sum(conf_matrix) - (tp + fn + fp)
 
             precision = precision_score(self.y_true, self.y_pred, average='weighted')
             recall = recall_score(self.y_true, self.y_pred, average='weighted')
@@ -133,7 +129,7 @@ class ModelTrainer:
             sensitivity = tp / (fn + tp)
 
             metrics.append({
-                'Class': class_name,
+                'Class': class_name[0],
                 'Precision': precision,
                 'Recall': recall,
                 'F1-Score': f1,
@@ -151,6 +147,7 @@ class ModelTrainer:
 
         # Save to CSV
         self.metrics_df.to_csv(f'Model_{self.model.get_name()}__Epoch_{self.epochs}__Batch_{self.batch_size}__Accuracy_{accuracy}.csv', index=False)
+        return self.metrics_df
 
     def loss_acc(self):
         
@@ -163,6 +160,7 @@ class ModelTrainer:
         self.history['val_loss'].append(self.val_loss)
         self.history['val_acc'].append(self.val_acc)
 
+        return self.history
         
     def training(self):
         
@@ -178,7 +176,7 @@ class ModelTrainer:
         
             self.train()
             self.validate()
-            self.loss_acc()
+            history = self.loss_acc()
 
 
             print(f"Epoch:{epoch + 1} / {self.epochs}, lr: {self.optimizer.param_groups[0]['lr']:.5f} train loss:{self.train_loss:.5f}, train acc: {self.train_acc:.5f}, valid loss:{self.val_loss:.5f}, valid acc:{self.val_acc:.5f}")
@@ -193,23 +191,12 @@ class ModelTrainer:
             # Load the best model state
             if self.best_model_state is not None:
                 self.model.load_state_dict(self.best_model_state)
-            
+            model = self.model
             
         self.test()
-        self.metrics()
+        metrics_df = self.metrics()
         
         return self.history, self.model, self.metrics_df
         
         
-        # Example usage:
-# Initialize model, datasets, and other required variables
-# model = YourModel()
-# train_dataset = YourTrainDataset()
-# val_dataset = YourValDataset()
-# test_dataset = YourTestDataset()
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# weights = ...
 
-# Create an instance of ModelTrainer and call the 'training' method
-# trainer = ModelTrainer(model, device, weights)
-# trainer.training(train_dataset, val_dataset, test_dataset)
