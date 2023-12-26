@@ -114,11 +114,11 @@ class ModelTrainer:
         self.y_true = np.array(y_true)
     def metrics(self):
         metrics = []
-        conf_matrix  = multilabel_confusion_matrix(self.y_true, self.y_pred)
+        conf_matrix  = confusion_matrix(self.y_true, self.y_pred)
         accuracy = (self.test_acc / len(self.test_loader))
         for i, class_name in zip(range(conf_matrix.shape[0]), self.labels_dict.items()):
 
-            tp = conf_matrix[i, i]
+            tp = conf_matrix[i][i]
             fn = np.sum(conf_matrix[i, :]) - tp
             fp = np.sum(conf_matrix[:, i]) - tp
             tn = np.sum(conf_matrix) - (tp + fn + fp)
