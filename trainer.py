@@ -53,7 +53,6 @@ class ModelTrainer:
     def train(self):
 
 
-
         for i, (images, labels) in enumerate(self.train_loader):
             images = images.to(self.device)
             labels = labels.to(self.device).long()   # Convert labels to Long data type
@@ -147,7 +146,7 @@ class ModelTrainer:
         self.metrics_df = pd.DataFrame(metrics)
 
         # Save to CSV
-        self.metrics_df.to_csv(f'Model_{self.model.get_name()}__Epoch_{self.epochs}__Batch_{self.batch_size}__Accuracy_{accuracy}.csv', index=False)
+        # self.metrics_df.to_csv(f'Model_{self.model.get_name()}__Epoch_{self.epochs}__Batch_{self.batch_size}__Accuracy_{accuracy}.csv', index=False)
         return self.metrics_df
 
     def loss_acc(self):

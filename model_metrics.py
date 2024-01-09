@@ -51,7 +51,7 @@ def plot_image(images, true_label, predicted_label, inverted_labels_dict):
     
     
     
-def plot_metrics(hist, label_model) :
+def plot_metrics(hist, path) :
     # plot training curves
     epochs = range(1, len(hist['train_loss']) + 1)
 
@@ -66,7 +66,7 @@ def plot_metrics(hist, label_model) :
     ax[0].set_xlabel('Epochs')
     ax[0].set_ylabel('Loss')
     ax[0].legend()
-    # plt.savefig(f'C:/Users/Lucas/PIBIC/model_pytorch_/metrics/loss{label_model}.png')  # This saves the plot as a PNG image
+    plt.savefig(f'{path}_Loss.png')  # This saves the plot as a PNG image
 
     ax[1].plot(epochs, hist['train_acc'], 'r-', label='Train')
     ax[1].plot(epochs, hist['val_acc'], 'b-', label='Evaluation')
@@ -74,7 +74,7 @@ def plot_metrics(hist, label_model) :
     ax[1].set_xlabel('Epochs')
     ax[1].set_ylabel('Acc')
     ax[1].legend()
-    # plt.savefig(f'C:/Users/Lucas/PIBIC/model_pytorch_/metrics/accuracy{label_model}.png')  # This saves the plot as a PNG image
+    plt.savefig(f'{path}_Accuracy.png')  # This saves the plot as a PNG image
     
 
     plt.show()
