@@ -122,9 +122,9 @@ class ModelTrainer:
             fp = np.sum(conf_matrix[:, i]) - tp
             tn = np.sum(conf_matrix) - (tp + fn + fp)
 
-            precision = precision_score(self.y_true, self.y_pred, average='weighted')
-            recall = recall_score(self.y_true, self.y_pred, average='weighted')
-            f1 = f1_score(self.y_true, self.y_pred, average='weighted')
+            precision = tp/(tp + fp)
+            recall =  tp/(tp + fn)
+            f1 =  2 * (precision * recall)/(precision + recall) 
             specificity = tn / (tn + fp)
             sensitivity = tp / (fn + tp)
 
