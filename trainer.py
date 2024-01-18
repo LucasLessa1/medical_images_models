@@ -134,7 +134,7 @@ class ModelTrainer:
                 'Recall': recall,
                 'F1-Score': f1,
                 'Accuracy': accuracy,
-                'Best Val Loss': self.best_val_loss,
+                'Best Val Loss': self.best_val_loss.item(),
                 'True Negatives': tn,
                 'specificity': specificity,
                 'sensitivity': sensitivity,
