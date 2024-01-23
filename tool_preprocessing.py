@@ -65,7 +65,7 @@ def split_dataset_by_label(dataframe, train_size, test_size, val_size, label_col
     for label in label_counts.index:
         label_data = shuffled_data[shuffled_data[label_column] == label]
         train, test_val = train_test_split(label_data, test_size=(1 - train_size), random_state=42)
-        
+        print(f'{label} - {len(test_val)}')
         if return_test:
             test, val = train_test_split(test_val, test_size=(val_size / (val_size + test_size)), random_state=42)
             test_data = pd.concat([test_data, test])
@@ -137,7 +137,6 @@ def get_label_counts_and_print(dataframe, label_column):
     return label_counts
 
 
-import imageio
 
 def image_analysis(dataframe, path_column='path'):
     smallest_pixel = float('inf')
@@ -242,7 +241,6 @@ def check_images_existence(dataframe, path_column='path'):
 
 
 
-import imageio
 
 def analyze_image_shapes(dataframe, min_shape, path_column='path'):
     total_images = 0
