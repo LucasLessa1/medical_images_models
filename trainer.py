@@ -163,8 +163,15 @@ class ModelTrainer:
 
         return self.history
         
+    def early_stop_condition(self):
+            if len(self.history['val_loss']) > self.patience:
+                # Check if validation loss has not decreased for the last `patience` epochs
+                recent_losses = self.history['val_loss'][-self.patience:]
+                return all(recent_losses[i] >= recent_losses[i + 1] for i in range(self.patience - 1))
+            else:
+                return False
+
     def training(self):
-        
         self.loader()
         self.loss_function()
         self.optimizer_step()
@@ -174,13 +181,15 @@ class ModelTrainer:
 
             self.train_loss = 0
             self.train_acc = 0
-        
+
             self.train()
             self.validate()
             history = self.loss_acc()
 
-
-            print(f"Epoch:{epoch + 1} / {self.epochs}, lr: {self.optimizer.param_groups[0]['lr']:.5f} train loss:{self.train_loss:.5f}, train acc: {self.train_acc:.5f}, valid loss:{self.val_loss:.5f}, valid acc:{self.val_acc:.5f}")
+            # Check for early stopping condition
+            if self.early_stop_condition():
+                print(f'Early stopping after epoch {epoch + 1} due to no improvement in validation loss.')
+                break
                 
             # Update the best model if validation loss is the lowest so far
             if self.val_loss < self.best_val_loss:
