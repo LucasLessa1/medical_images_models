@@ -369,7 +369,7 @@ def print_image_statistics(smallest_pixel: int,
                            largest_pixel: int,
                            total_images: int,
                            channel_values: Dict
-                           )-> None:
+                           ) -> None:
     """
     Print the image statistics.
 
