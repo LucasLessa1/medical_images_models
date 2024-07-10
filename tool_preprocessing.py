@@ -438,31 +438,110 @@ def format_image_statistics(smallest_pixel: int,
     }
 
 
-def image_analysis(dataframe: pd.DataFrame,
-                   path_column: str = 'path'
-                   ) -> Dict:
-    """
-    Analyze the images in the DataFrame and extract image statistics.
+def image_analysis(dataframe, path_column='path'):
+    smallest_pixel = float('inf')
+    largest_pixel = 0
+    total_images = 0
+    channel_values = {'R': [], 'G': [], 'B': []}
+    is_gray = False
+    # Iterate through each image in the dataframe
+    for index, row in dataframe.iterrows():
+        image_path = row[path_column]
+        if image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            # Read the image using imageio
+            image = imageio.imread(image_path)
 
-    Args:
-    - dataframe (pd.DataFrame): DataFrame containing image paths.
-    - path_column (str, optional): Name of the column containing
-    image paths (default: 'path').
+            # Check if the image is grayscale or RGB
+            if len(image.shape) == 2:  # Grayscale image
+                min_pixel = np.min(image)
+                max_pixel = np.max(image)
+                smallest_pixel = min(smallest_pixel, min_pixel)
+                largest_pixel = max(largest_pixel, max_pixel)
+                is_gray = True
+                total_images += 1
+                
+                continue
+                # image = np.expand_dims(image, axis=-1)  # Add a channel dimension
+            elif len(image.shape) == 3 and image.shape[2] == 4:  # RGBA image
+                image = image[:, :, :3]  # Remove alpha channel
 
-    Returns:
-    - image_stats (Dict): Dictionary containing image statistics.
-    """
-    smallest_pixel, largest_pixel, channel_values = (
-        calculate_image_statistics(dataframe, path_column))
-    print_image_statistics(smallest_pixel,
-                           largest_pixel,
-                           len(dataframe),
-                           channel_values)
-    image_stats = format_image_statistics(smallest_pixel,
-                                          largest_pixel,
-                                          len(dataframe),
-                                          channel_values)
-    return image_stats
+            # Check for smallest and largest pixel value
+            min_pixel = np.min(image)
+            max_pixel = np.max(image)
+            smallest_pixel = min(smallest_pixel, min_pixel)
+            largest_pixel = max(largest_pixel, max_pixel)
+
+            # Extract channel-wise values
+            channels = np.dsplit(image, image.shape[-1])
+            for i, channel in enumerate(channels):
+                mean_val = np.mean(channel)
+                std_val = np.std(channel)
+                channel_values['R' if i == 0 else 'G' if i == 1 else 'B'].append((mean_val, std_val))
+            
+            total_images += 1
+    
+    # Print the results
+    print(f"Smallest pixel value: {smallest_pixel}")
+    print(f"Largest pixel value: {largest_pixel}")
+    print(f"Total images processed: {total_images}")
+    
+    channel_stats = {}
+    if is_gray:
+        return {
+        'smallest_pixel_value': smallest_pixel,
+        'largest_pixel_value': largest_pixel,
+        'total_images': total_images,
+        'channel_statistics': channel_stats,
+        'channels': 1
+    }
+    else:
+        # Calculate average and standard deviation per channel
+        for channel, values in channel_values.items():
+            avg = np.mean([val[0] for val in values])
+            std_dev = np.mean([val[1] for val in values])
+            channel_stats[channel] = {'average': avg, 'std_dev': std_dev}
+        
+        print("Channel Statistics:")
+        for channel, stats in channel_stats.items():
+            print(f"Channel '{channel}':")
+            print(f"  - Average: {stats['average']}")
+            print(f"  - Standard Deviation: {stats['std_dev']}")
+        
+        # Return results as a dictionary
+        return {
+            'smallest_pixel_value': smallest_pixel,
+            'largest_pixel_value': largest_pixel,
+            'total_images': total_images,
+            'channel_statistics': channel_stats,
+            'channels': 3
+        }
+
+
+# def image_analysis(dataframe: pd.DataFrame,
+#                    path_column: str = 'path'
+#                    ) -> Dict:
+#     """
+#     Analyze the images in the DataFrame and extract image statistics.
+
+#     Args:
+#     - dataframe (pd.DataFrame): DataFrame containing image paths.
+#     - path_column (str, optional): Name of the column containing
+#     image paths (default: 'path').
+
+#     Returns:
+#     - image_stats (Dict): Dictionary containing image statistics.
+#     """
+#     smallest_pixel, largest_pixel, channel_values = (
+#         calculate_image_statistics(dataframe, path_column))
+#     print_image_statistics(smallest_pixel,
+#                            largest_pixel,
+#                            len(dataframe),
+#                            channel_values)
+#     image_stats = format_image_statistics(smallest_pixel,
+#                                           largest_pixel,
+#                                           len(dataframe),
+#                                           channel_values)
+#     return image_stats
 
 
 def check_images_existence(dataframe: pd.DataFrame,
