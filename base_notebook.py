@@ -41,7 +41,6 @@ if flag_folder_sep:
     base_path = './COVID_Dataset_original/'
 
     results_path = f"./Resultados_COVID/"
-    os.makedirs(results_path)
 else:
     base_path = 'C:/Users/lucas/OneDrive - unb.br/Documents/UnB/Semestres-ENE/TCC/The HAM10000 dataset'
     results_path = f"C:/Users/Lucas/medical_images_models/results_HAM"
