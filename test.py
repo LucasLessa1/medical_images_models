@@ -14,7 +14,7 @@ def extract_zip(zip_path, extract_to='.'):
 # https://drive.google.com/file/d/1wp9rTiYwX3dJgbwdvifc86_CsC37q4hj/view?usp=sharing
 # Download files
 
-dataset_zip = '../COVID_Dataset_original.zip'
+dataset_zip = '/mnt/nas/LucasLessa/COVID_Dataset_original.zip'
 
 print(dataset_zip)
 # Extract files
