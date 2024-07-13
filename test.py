@@ -1,20 +1,26 @@
-import numpy as np
-def calc_pot_aparente(flag, x, pf):
-    if flag == "kW":
-        return x / pf
-    elif flag == "kVA":
-        return x
-    else:  # kVar = kVA
+import gdown
+import zipfile
+import os
 
-        return x
-    
+def download(id):
+  url = 'https://drive.google.com/uc?id=' + str(id)
+  gdown.download(url, output = None, quiet = False)
+
+def extract_zip(zip_path, extract_to='.'):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+
+## Dataset
+# https://drive.google.com/file/d/12486kfJmFGLrVzMGGVM4kOIBOjwG5BOS/view?usp=sharing
+
+## modules
+# https://drive.google.com/file/d/1wp9rTiYwX3dJgbwdvifc86_CsC37q4hj/view?usp=sharing
+# Download files
+download('12486kfJmFGLrVzMGGVM4kOIBOjwG5BOS')
 
 
-carga_c1 = calc_pot_aparente("kW", 2000, 1)
-carga_c2 = calc_pot_aparente("kW", 800, 0.92)
-carga_c3 = calc_pot_aparente("kvar", 800, None)
+dataset_zip = '../COVID_Dataset_original.zip'
 
-carga_d = calc_pot_aparente("kW", 1000, 0.92)
 
-carga_total = carga_c1 + carga_c2 + carga_c3 + carga_d
-print(f"Carga total: {carga_total:.2f} kVA")
+# Extract files
+extract_zip(dataset_zip)
