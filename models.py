@@ -30,7 +30,7 @@ class ResNet50(nn.Module):
         (default: 3).
         """
         super().__init__()
-        self.resnet50 = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+        self.resnet50 = models.resnet50(pretrained=True)
 
         # Modify the convolutional layer based on input channels
         self.resnet50.conv1 = nn.Conv2d(input_channels,
