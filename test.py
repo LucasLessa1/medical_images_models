@@ -17,12 +17,12 @@ def extract_zip(zip_path, extract_to='.'):
 # https://drive.google.com/file/d/1wp9rTiYwX3dJgbwdvifc86_CsC37q4hj/view?usp=sharing
 # Download files
 download('12486kfJmFGLrVzMGGVM4kOIBOjwG5BOS')
-download('1wp9rTiYwX3dJgbwdvifc86_CsC37q4hj')
+
 
 
 dataset_zip = 'COVID_Dataset_original.zip'
-modules_zip = 'medical_images_models.zip'
+
 
 # Extract files
 extract_zip(dataset_zip)
-extract_zip(modules_zip)
+
