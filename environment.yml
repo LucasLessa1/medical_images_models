@@ -1,4 +1,4 @@
-name: base
+name: torch000
 channels:
   - pytorch
   - nvidia
@@ -267,4 +267,4 @@ dependencies:
       - xarray==2023.9.0
       - xgboost==2.0.0
       - yarl==1.9.2
-prefix: C:\programmers\envs\torch000
+prefix: /opt/conda/torch000
