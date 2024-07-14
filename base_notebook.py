@@ -343,20 +343,20 @@ metrics_df.to_csv((
     f"__Epoch_{Epochs}__Batch_{batch_size}__"
     f"Accuracy_{metrics_df['Accuracy'][0]}.csv"), index=False)
 
-plot_metrics(history,
-             path=results_path)
+# plot_metrics(history,
+#              path=results_path)
 
 """## Plot Images - True Predicted"""
 
 inverted_labels_dict = {value: key for key, value in labels_dict.items()}
 inverted_labels_dict
 
-plot_image_pred_true(model,
-                     test_dataset,
-                     device,
-                     inverted_labels_dict,
-                     num_images_to_plot=20,
-                     plot_images=True)
+# plot_image_pred_true(model,
+#                      test_dataset,
+#                      device,
+#                      inverted_labels_dict,
+#                      num_images_to_plot=20,
+#                      plot_images=True)
 
 """# Save Model"""
 
